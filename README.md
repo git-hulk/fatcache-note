@@ -38,7 +38,4 @@ fatcache-note
 
 [10. 总结](/)
 
------------------------------
-##### description
 
-ship it
