@@ -9,7 +9,7 @@ fatcache-note
 
 目录
 
-[1. fatcache简介](/contens/description.md)
+[1. fatcache简介](/contents/description.md)
 
 
 [2. 使用参数](/)
