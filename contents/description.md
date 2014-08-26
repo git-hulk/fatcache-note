@@ -55,6 +55,8 @@ fatcache适合用来存储相对不是那么热的数据, 以访问频率来说�
 *   fatcache是单线程  
   
 *   fatcache不支持二进制协议
+
+*   slab实现上有所区别  
 <br />
 <br />
 
