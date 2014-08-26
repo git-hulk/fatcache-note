@@ -15,7 +15,7 @@ fatcache是由twitter，TA是基于SSD, 同时使用memcaced的协议，但只�
 fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的方式来代替内存.
 <br />
 <br />
-##### 为什么选择SSD而不是直接使用内存? #####
+##### a) 为什么选择SSD而不是直接使用内存? #####
 
 *   内存虽然比SSD快了很多, 但是同等密度的容量，价格也高出很多.
 
@@ -26,7 +26,7 @@ fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的�
 <br />
 <br />
 
-#####需要提前理解的东西? ######
+##### b) 需要提前理解的东西? ######
 
 *  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), fatcache是基于mc的文本协议来开发.
 
@@ -35,7 +35,7 @@ fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的�
 <br />
 <br />
 
-##### fatcache Vs Memcached #####
+##### c) fatcache Vs Memcached #####
 
 *   fatcache的实际存储数据可能在内存或者SSD, Memcached全部内存.
   
