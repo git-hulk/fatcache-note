@@ -3,9 +3,8 @@
 ------------------
 
 fatcache是由twitter，TA是基于SSD, 同时使用memcaced的协议，但只支持文本协议(memcached 支持二进制协议).
-  
-  
-
+<br />
+<br />
 对于SSD开发来说, 有两种不同的理解:
 
 *   SSD是更快的磁盘.
@@ -31,7 +30,6 @@ fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的�
 *  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), fatcache是基于mc的文本协议来开发.
 
 *  [slab机制](http://en.wikipedia.org/wiki/Slab_allocation). 
-
 <br />
 <br />
 
