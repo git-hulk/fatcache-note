@@ -56,3 +56,6 @@ fatcache是由twitter基于SSD, 同时使用memcaced的协议(只支持文本协
 *   随机写转化为顺序写
 
 > NOTE: fatcache是随机读, 在性能上, 写的性能远好于读, 具体的性能可以参考: [Performance](https://github.com/twitter/fatcache/blob/master/notes/performance.md)
+
+
+[Next 配置参数](./configure.md)
