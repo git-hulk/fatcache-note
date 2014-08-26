@@ -11,7 +11,7 @@ fatcache是由twitter基于SSD, 同时使用memcaced的协议(只支持文本协
 
 *   SSD是内存的扩展，TA的角色就是可以认为以更低价的存储来扩展内存容量.
 
-fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的方式来代替内存.
+> NOTE: fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的方式来代替内存.
 <br />
 <br />
 ##### a) 为什么选择SSD而不是直接使用内存? #####
@@ -54,4 +54,4 @@ fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的�
 
 *   随机写转化为顺序写. 
 
-fatcache是随机读, 在性能上, 写的性能远好于读, 具体的性能可以参考: [Performance](https://github.com/twitter/fatcache/blob/master/notes/performance.md)
+> NOTE: fatcache是随机读, 在性能上, 写的性能远好于读, 具体的性能可以参考: [Performance](https://github.com/twitter/fatcache/blob/master/notes/performance.md)
