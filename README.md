@@ -12,7 +12,7 @@ fatcache-note
 [1. fatcache简介](/contents/description.md)
 
 
-[2. 使用参数](/contents/configure.md)
+[2. 配置参数](/contents/configure.md)
 
 
 [3. 网络框架](/contents/network.md)
