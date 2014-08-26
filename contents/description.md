@@ -30,7 +30,7 @@ fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来�
 
 fatcache适合用来存储相对不是那么热的数据, 以访问频率来说，就是单位时间内，访问次数比较少的场景。 
 
-即作为二级缓存，一级缓存为全内存的cache, 如redis, memcache等, 挡掉大部分的请求, 当请求miss的时候，到fatcache来取。
+即作为二级缓存，一级缓存为全内存的cache, 如redis, mc挡掉大部分的请求, 当请求miss的时候，到fatcache来取。
 简单的来说，就是存放冷热程度介于一级缓存和DB之间的数据。
 
 <br />
@@ -44,13 +44,13 @@ fatcache适合用来存储相对不是那么热的数据, 以访问频率来说�
 <br />
 <br />
 
-##### d) fatcache Vs Memcached #####
+##### d) Fatcache Vs Memcached #####
 
-*   fatcache的实际存储数据可能在内存或者SSD, Memcached全部内存
+*   fatcache的实际存储数据在SSD，一小部分cache在内存, mc全部内存
   
 *   fatcache多了一层索引。 索引除了快速判断key是否存在，同时用来记录数据所在位置，快速读取value
   
-*   MC 哈希表存储真实数据, fatcache哈希表只存储索引信息
+*   mc 哈希表存储真实数据, fatcache哈希表只存储索引信息
 
 *   fatcache是单线程  
   
