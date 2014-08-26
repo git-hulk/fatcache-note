@@ -40,5 +40,18 @@ fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的�
 *   fatcache多了一层索引。 索引除了快速判断key是否存在，同时用来记录数据所在位置，快速读取value.
   
 *   MC 哈希表存储真实数据, fatcache哈希表只存储索引信息.
+
+*   fatcache是单线程.  
   
 *   fatcache不支持二进制协议.
+<br />
+<br />
+
+##### d) 针对SSD的优化? #####
+
+*   批量写, fatcache每次写磁盘都是slab为单位, 默认1M, 减少大量的小IO写, 同时避免写放大.
+
+
+*   随机写转化为顺序写. 
+
+fatcache是随机读, 在性能上, 写的性能远好于读, 具体的性能可以参考: [Performance](https://github.com/twitter/fatcache/blob/master/notes/performance.md)
