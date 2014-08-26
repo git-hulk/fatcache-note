@@ -2,7 +2,7 @@
 
 ------------------
 
-fatcache是由twitter基于SSD, 同时使用memcaced的协议(只支持文本协议)来开发的缓存。更简单的理解，memcached把数据存放在内存, 而fatcache把数据存放在SSD上。 当然fatcache也会有很小部分数据会在内存, 但是这部分数据应该看作是SSD的cache，理由是fatcache写SSD是direct io, 没有page cache, 所以这部分数据主要是作为cache使用。
+fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来开发的缓存应用。更简单的理解，memcached把数据存放在内存, 而fatcache把数据存放在SSD上。 当然fatcache也会有很小部分数据会在内存, 但是这部分数据应该看作是SSD的cache，理由是fatcache写SSD是direct io, 没有page cache, 所以这部分数据主要是作为cache使用。
 <br />
 <br />
 对于SSD开发来说, 有两种不同的理解:
