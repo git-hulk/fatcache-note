@@ -2,7 +2,7 @@
 
 ------------------
 
-fatcache是由twitter，TA是基于SSD, 同时使用memcaced的协议，但只支持文本协议(memcached 支持二进制协议).
+fatcache是由twitter基于SSD, 同时使用memcaced的协议(只支持文本协议)来开发的缓存.
 <br />
 <br />
 对于SSD开发来说, 有两种不同的理解:
