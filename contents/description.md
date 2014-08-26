@@ -11,7 +11,7 @@ fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来�
 
 *   SSD是内存的扩展，当作慢内存使用，不要求数据的强一致性。
 
->NOTE: fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的方式来代替内存。
+>NOTE: fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以更廉价的方式来代替内存。
 
 <br />
 <br />
@@ -25,8 +25,15 @@ fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来�
     当冷数据(访问比较少)比例大大高于热数据时, 这种存储方式就很不划算
 <br />
 <br />
+#### b) 使用场景
+fatcache适合用来存储相对不是那么热的数据, 以访问频率来说，就是单位时间内，访问次数比较少的场景。 
+即作为二级缓存，一级缓存为全内存的cache, 如redis, memcache等, 能存放大部分的热数据, 挡掉大部分的请求, 当需要访问不那么热的数据时，到fatcache来取。
+简单的来说，就是存放冷热程度介于一级缓存和DB之间的数据。
 
-##### b) 需要提前理解的东西? ######
+<br />
+<br />
+
+##### c) 需要提前理解的东西? ######
 
 *  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), fatcache是基于mc的文本协议来开发
 
@@ -34,7 +41,7 @@ fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来�
 <br />
 <br />
 
-##### c) fatcache Vs Memcached #####
+##### d) fatcache Vs Memcached #####
 
 *   fatcache的实际存储数据可能在内存或者SSD, Memcached全部内存
   
@@ -48,7 +55,7 @@ fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来�
 <br />
 <br />
 
-##### d) 针对SSD的优化? #####
+##### e) 针对SSD的优化? #####
 
 *   批量写, fatcache每次写磁盘都是slab为单位, 默认1M, 减少大量的小IO写, 同时避免写放大
 
