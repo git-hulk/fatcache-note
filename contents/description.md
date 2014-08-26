@@ -25,7 +25,8 @@ fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以廉价的�
     当冷数据(访问比较少)比例大大高于热数据时, 这种存储方式就很不划算.
 <br />
 <br />
-##### 需要提前理解的东西? ######
+
+#####需要提前理解的东西? ######
 
 *  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), fatcache是基于mc的文本协议来开发.
 
