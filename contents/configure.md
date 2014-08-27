@@ -53,7 +53,21 @@ fatcache server是否后台运行，一般部署的时候，会后台执行，�
 ```
 -v, --verbosity=N
 
-日志级别，0~11, 默认是6
+日志级别，0~11, 默认是6, 下面是相关定义：
+
+#define LOG_EMERG   0   /* system in unusable */
+#define LOG_ALERT   1   /* action must be taken immediately */
+#define LOG_CRIT    2   /* critical conditions */
+#define LOG_ERR     3   /* error conditions */
+#define LOG_WARN    4   /* warning conditions */
+#define LOG_NOTICE  5   /* normal but significant condition (default) */
+#define LOG_INFO    6   /* informational */
+#define LOG_DEBUG   7   /* debug messages */
+#define LOG_VERB    8   /* verbose messages */
+#define LOG_VVERB   9   /* verbose messages on crack */
+#define LOG_VVVERB  10  /* verbose messages on ganga */
+#define LOG_PVERB   11  /* periodic verbose messages on crack */
+
 ```
 
 ```
