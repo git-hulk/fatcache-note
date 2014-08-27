@@ -79,3 +79,45 @@ fatcache server是否后台运行，一般部署的时候，会后台执行，�
  如果第一级item长度是20byte, 第二级的就是 20 * 1.25 = 25bytes, 第三级就是 25 *1.25, 以此类推...
  设置这个参数，比较需要技术含量，如果算不准，就不要乱改了。
 ```
+```
+-n, --min-item-chunk-size=N
+
+item最小长度，也就是slabclass第一层item的大小, 默认84bytes, 设置大小不能小于84.
+```
+```
+-I, --slab-size=N
+
+slab大小，默认是1M. 这个是fatcache写入磁盘的单位，所以如果有修改，需要对比一下性能.
+```
+```
+-i, --max-index-memory=N
+
+索引占用最大内存，索引数量 = max-index-memory/sizeof(itemx), sizeof当前在64bit操作系统上是44bytes.
+索引的数量也就是能容纳k-v数，如果太小，可能会有大量k-v剔除。这个值要根据k-v大概数量先算好。
+```
+```
+-m, --max-slab-memory=N
+
+内存slab的最大内存，由于fatcache操作ssd是direct io, 这个相当于ssd的cache。
+这个设置越大，读写速度会越快.
+```
+```
+-z, --slab-profile=S
+
+slab class优化配置，可以配置Slab每一层的item大小，不用factor作为增长因子。
+```
+```
+-D, --ssd-device=S
+
+数据存放的磁盘文件路径，如果是分区直接使用，如果是普通文件，需要先撑大文件。
+比如设置1G, 需要把文件lseek到1G, 不然fatcache读出来的size = 0, 会产生错误.
+```
+```
+-s, --server-id=I/N
+
+当部署多个实例，需要设置这个参数，N表示实例个数，I表示当前实例编号。
+多实例能更好利用ssd并发读写，比如ssd总共是8G可用，那么当前实例读写开始地址 = (8G/8) *I。
+```
+
+fatcache 的配置就是上面这些，阅读可以先大概知道，后续真正使用再回来看。
+接下去看一下 [fatcache的访问模型](./view_model.md)
