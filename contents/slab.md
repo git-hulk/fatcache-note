@@ -14,6 +14,7 @@ slab分配最简单的理解, 就是每次使用内存时，一次申请一片�
 item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item. 
 
 简单版的slab如下图所示:
+
 ![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/slab_1.png)
 
 ##### slab class #####
