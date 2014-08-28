@@ -38,9 +38,9 @@ fatcache适合用来存储相对不是那么热的数据, 以访问频率来说�
 
 ##### c) 需要提前理解的东西? ######
 
-*  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), fatcache是基于mc的文本协议来开发
+*  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), 协议不熟悉，就无法理解fatcache协议解析状态机。
 
-*  [slab机制](http://en.wikipedia.org/wiki/Slab_allocation)
+*  [slab机制](http://en.wikipedia.org/wiki/Slab_allocation) 后续所有读写kv都是在slab里面做操作，接下来就会介绍。
 <br />
 <br />
 
