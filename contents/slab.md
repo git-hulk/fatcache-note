@@ -44,6 +44,41 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 的item数量是固定的， 所以slab可能会有三种状态: free slab(完全没有使用)， partial slab(部分使用),
 full slab(全部使用).
 
+最开始， 由于没开始使用，只会有free slab， 当使用一段时间后，就转换为partial slab, 如果这个slab已经被分配完，
+则会变为full slab.
 
+在fatcache中， 会维护这三种状态的slab, 其中free slab， full slab队列是slabclass所有级公用，partial slab是每一级都有一个
+队列。
+
+当某一级需要分配空间， 会经历下面的步骤：
+```
+  1. 如果这一级partial slab队列不为空， 先从这个队列里面取, 如果不为空，直接分配， 判断slab是满了，是？移到full slab队列。
+  2. 如果这一级parital slab队列为空， 从free slab队列获取一个slab, 放到这一级slab，重新分配。
+```
+我们以内存的slab作为例子， 在fc.c里面:
+```c
+static struct item * _slab_get_item(uint8_t cid) {
+...
+// cid是class id, 指的是在cid这层分配slab.
+c = &ctable[cid];
+// 获取第一个partial slab info
+sinfo = TAILQ_FIRST(&c->partial_msinfoq);
+ASSERT(!slab_full(sinfo));
+slab = slab_from_maddr(sinfo->addr, true);
+/* consume an item from partial slab */
+it = slab_to_item(slab, sinfo->nalloc, c->size, false);
+it->offset = (uint32_t)((uint8_t *)it - (uint8_t *)slab);
+it->sid = slab->sid;
+sinfo->nalloc++;
+if (slab_full(sinfo)) {
+    /* move memory slab from partial to full q */
+    TAILQ_REMOVE(&c->partial_msinfoq, sinfo, tqe);
+    nfull_msinfoq++;
+    TAILQ_INSERT_TAIL(&full_msinfoq, sinfo, tqe);
+}
+}
+
+
+```
 
 
