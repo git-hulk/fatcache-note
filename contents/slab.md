@@ -55,27 +55,64 @@ full slab(全部使用).
   1. 如果这一级partial slab队列不为空， 先从这个队列里面取, 如果不为空，直接分配， 判断slab是满了，是？移到full slab队列。
   2. 如果这一级parital slab队列为空， 从free slab队列获取一个slab, 放到这一级slab，重新分配。
 ```
-我们以内存的slab作为例子， 在fc.c里面:
+我们以内存的slab作为例子， 在fc.c里面, 我只列出关键部分:
 ```c
-static struct item * _slab_get_item(uint8_t cid) {
-...
-// cid是class id, 指的是在cid这层分配slab.
-c = &ctable[cid];
-// 获取第一个partial slab info
-sinfo = TAILQ_FIRST(&c->partial_msinfoq);
-ASSERT(!slab_full(sinfo));
-slab = slab_from_maddr(sinfo->addr, true);
-/* consume an item from partial slab */
-it = slab_to_item(slab, sinfo->nalloc, c->size, false);
-it->offset = (uint32_t)((uint8_t *)it - (uint8_t *)slab);
-it->sid = slab->sid;
-sinfo->nalloc++;
-if (slab_full(sinfo)) {
-    /* move memory slab from partial to full q */
-    TAILQ_REMOVE(&c->partial_msinfoq, sinfo, tqe);
-    nfull_msinfoq++;
-    TAILQ_INSERT_TAIL(&full_msinfoq, sinfo, tqe);
+
+struct item *
+slab_get_item(uint8_t cid) {
+    
+    ....
+    
+    if (!TAILQ_EMPTY(&c->partial_msinfoq)) {
+        /* 如果不为空，则从partial slab队列里面取一个slab, _slab_get_item在下面定义*/
+        return _slab_get_item(cid);
+    }
+    
+    .....
+    
+    if (!TAILQ_EMPTY(&free_msinfoq)) {
+        /* 如果parital 为空则从free slab队列里面取一个，放到partial slab队列*/
+        sinfo = TAILQ_FIRST(&free_msinfoq);
+        ASSERT(nfree_msinfoq > 0);
+        nfree_msinfoq--;
+        TAILQ_REMOVE(&free_msinfoq, sinfo, tqe);
+        
+        // 插入到partial slab队列
+        TAILQ_INSERT_HEAD(&c->partial_msinfoq, sinfo, tqe);
+        
+        ...
+        
+        /* 仍然进入从partial slab队列获取的逻辑， 在下面函数 */
+        return _slab_get_item(cid);
+    }
 }
+
+
+static struct item * _slab_get_item(uint8_t cid) {
+    ...
+    // cid是class id, 指的是在cid这层分配slab.
+    c = &ctable[cid];
+    // 获取第一个partial slab info
+    sinfo = TAILQ_FIRST(&c->partial_msinfoq);
+    // 这个slab应该是不为满的状态
+    ASSERT(!slab_full(sinfo));
+    
+    /* 拿到slab地址 */
+    slab = slab_from_maddr(sinfo->addr, true);
+    
+    /* 从partial slab分配一个item */
+    it = slab_to_item(slab, sinfo->nalloc, c->size, false);
+    it->offset = (uint32_t)((uint8_t *)it - (uint8_t *)slab);
+    it->sid = slab->sid;
+    sinfo->nalloc++;
+    
+    /* 分配之后，判断slab是否满了， 如果满了，放到full slab队列中 */
+    if (slab_full(sinfo)) {
+        /* move memory slab from partial to full q */
+        TAILQ_REMOVE(&c->partial_msinfoq, sinfo, tqe);
+        nfull_msinfoq++;
+       TAILQ_INSERT_TAIL(&full_msinfoq, sinfo, tqe);
+    }
 }
 
 
