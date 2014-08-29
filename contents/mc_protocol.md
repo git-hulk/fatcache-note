@@ -3,7 +3,7 @@
 -----------------
 
 MC指的是memcached, 它支持文本和二进制协议，fatcache只使用文本协议。 我们这里不对二进制协议做
-解释，想要的可以看 [mc二进制协议](https://code.google.com/p/memcached/wiki/BinaryProtocolRevamped)
+解释，想要的可以看 [mc二进制协议](https://code.google.com/p/memcached/wiki/BinaryProtocolRevamped)，同时下面罗列的也只是常用的协议。
 
 我们常用的协议可以分为以下几类:
 
