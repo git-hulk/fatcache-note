@@ -121,5 +121,30 @@ static struct item * _slab_get_item(uint8_t cid) {
 
 
 ```
+<br />
+<br />
 
+##### memory and disk slab #####
 
+fatcache的slab来自两个地方，一个是内存，另一个是磁盘。在启动的时候，可以指定内存slab大小，
+默认是64M, 我们也会指定分区，磁盘slab大小跟分区大小一致。然后再把内存和磁盘的这片空间，
+切分为一块块slab, 再添加到free slab队列。
+
+```
+fatcache 写
+1. 如果还有内存slab未写满，直接分配地址，返回。
+2。 如果所有内存slab已经写满， 从内存full slab队列头部，剔除一个slab, 交换到磁盘slab，
+空出内存slab, 重新分配。
+```
+我们可以看到，写的时候一定是写在内存里面，而读是，根据slab所在位置，直接读取，所以我们可以知道，
+只有写才会让内存slab和磁盘slab数据进行交换， 读不会影响数据所在位置是在内存还是磁盘，换句话说，
+只有更新才会影响fatcache的数据的热度。
+
+看完这篇， 应该要理解的几个东西:
+```
+1. slab 和 slabclass
+2. slab 三种状态，以及三种状态的转换
+3. fatcache不仅有内存slab还有磁盘slab.
+```
+
+接下来讲一下，另外一个fatcache很核心的东西，[索引](./itemx.md)
