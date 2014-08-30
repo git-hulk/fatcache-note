@@ -183,12 +183,9 @@ done:
 [参数配置](./configure.md) 这一节里面`-i, --max-index-memory=N`, 就是最大索引的使用内存，默认64M，在64bit操作系统，
 每个索引占用44bytes, 如果当key的数量超过索引的最大数目时，就会产生剔除。
 过程大概如下:
-```
-1. itemx队列是否是空? 
-2. 如果不是拿到索引，返回.
-3. 如果为空， 就把磁盘最旧的slab剔除，回收索引，放到itemx的空闲队列。
-4. 返回1，重复.
-```
+
+![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/evi.png)
+
 看一下fatcache里面的实现, 看一下`fc_slab.c`,可以看过，要分配item之前，会先判断索引是否已经用完，
 如果用完的话，会把最旧的slab剔除，回收索引.
 ```c
