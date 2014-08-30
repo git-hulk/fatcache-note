@@ -16,6 +16,8 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 简单版的slab如下图所示:
 
 ![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/slab_1.png)
+<br />
+<br />
 
 ##### slab class #####
 
@@ -37,6 +39,8 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 如果要申请130bytes的内存， 就是找到第三级.
 
 回到fatcache, 在[配置参数](./configure.md)里面-f 选项就是配置增长因子， -I 配置slab大小。
+<br />
+<br />
 
 ##### slab的三种状态 #####
 
