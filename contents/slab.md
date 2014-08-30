@@ -55,7 +55,7 @@ full slab(全部使用).
   1. 如果这一级partial slab队列不为空， 先从这个队列里面取, 如果不为空，直接分配， 判断slab是满了，是？移到full slab队列。
   2. 如果这一级parital slab队列为空， 从free slab队列获取一个slab, 放到这一级slab，重新分配。
 ```
-我们以内存的slab作为例子， 在fc.c里面, 我只列出关键部分:
+我们以内存的slab作为例子， 在`fc.c`里面, 我只列出关键部分:
 ```c
 
 struct item *
