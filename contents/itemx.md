@@ -5,6 +5,7 @@
 索引是fatcache是一个很核心的机制，fatcache是通过查找索引来找到数据所在位置。删除数据的时候，
 直接删除索引，而不是真正取删除数据。
 
+--------------------------
 
 我们可以先来看一下索引(itemx)的定义，在`fc_itemx.h`里面
 ```c
@@ -60,4 +61,114 @@ cas: 每个key都会记录一个unique数值，可以看作版本号，在check 
 ```
 
 其中参数`hash`是外部计算好的hash值, md也是根据key做sha1得到的。可以看到第7代码是先获取到bucket链表，然后遍历bucket，
-查找md一致的itemx.
+查找md一致的itemx， 这段代码比较简单，这里不再罗嗦.
+<br />
+<br />
+##### 根据itemx读数据 #####
+
+上述的过程是根据key找到了对应的itemx(索引)， 而我们真正的数据是存储在slab中，接下来看看如何通过itemx找到对应数据。
+
+我们来看看，fatcache里面处理一次get的过程，代码来自'fc_request.c',
+```c
+static void
+req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
+{
+    struct itemx *itx;
+    struct item *it;
+
+    /* 上面解释过的函数， 先找到索引 */
+    itx = itemx_getx(msg->hash, msg->md);
+    
+    /* 如果找不到索引，说明key不存在，直接返回. */
+    if (itx == NULL) {
+        ...
+        rsp_send_status(ctx, conn, msg, type);
+        return;
+    }
+    
+    /* 如果存在就读取到对于的item，我们下面细看一下 */
+    it = slab_read_item(itx->sid, itx->offset);
+    /* 如果读不到item是server异常，返回错误 */
+    if (it == NULL) {
+        rsp_send_error(ctx, conn, msg, MSG_RSP_SERVER_ERROR, errno);
+        return;
+    }
+    /* 判断是否过期 */
+    if (item_expired(it)) {
+        rsp_send_status(ctx, conn, msg, MSG_RSP_NOT_FOUND);
+        return;
+    }
+
+    /* 数据存在而且没有过期， 就返回 */
+    rsp_send_value(ctx, conn, msg, it, itx->cas);
+}
+```
+上面如果itemx存在，就会调用`slab_read_item`来获取item, 下面看一下这个函数:
+```c
+struct item *
+slab_read_item(uint32_t sid, uint32_t addr)
+{
+    
+    struct slabclass *c;    /* slab class */
+    struct item *it;        /* item */
+    struct slabinfo *sinfo; /* slab info */
+    int n;                  /* bytes read */
+    off_t off;              /* offset to read from */
+    size_t size;            /* size to read */
+    off_t aligned_off;      /* aligned offset to read from */
+    size_t aligned_size;    /* aligned size to read */
+    
+    ASSERT(sid < nstable);
+    ASSERT(addr < settings.slab_size);
+    
+    /* 根据sid找到slab info, sinfo是一个大数组，存放memory slab和disk slab的所有slab info. */
+    sinfo = &stable[sid];
+    /* 根据slab info里面记录slab info所在的slab class id, 找到对应slabclass */
+    c = &ctable[sinfo->cid];
+    size = settings.slab_size;
+    it = NULL;
+    
+    /* slab 在内存里面 */
+    if (sinfo->mem) {
+        /* 计算slab在所在的位置+ key所在slab的偏移，计算item的位置 */
+        off = (off_t)sinfo->addr * settings.slab_size + addr;
+        /* 把item拷贝到readbuf */
+        fc_memcpy(readbuf, mstart + off, c->size);
+        it = (struct item *)readbuf;
+        goto done;
+    }
+
+    /* 如果item在磁盘，注意，读磁盘可能是设备，需要对齐读的地址 */
+    off = slab_to_daddr(sinfo) + addr;
+    /* item地址其实地址对齐到512的整数倍 */
+    aligned_off = ROUND_DOWN(off, 512);
+    /* item的长度对齐到512的整数倍 */
+    aligned_size = ROUND_UP((c->size + (off - aligned_off)), 512);
+
+    /* 读取item的数据 */
+    n = pread(fd, readbuf, aligned_size, aligned_off);
+    if (n < aligned_size) {
+        log_error("pread fd %d %zu bytes at offset %"PRIu64" failed: %s", fd,
+                  aligned_size, (uint64_t)aligned_off, strerror(errno));
+        return NULL;
+    }
+    it = (struct item *)(readbuf + (off - aligned_off));
+
+done:
+    /* 数据正确性校验 */
+    ASSERT(it->magic == ITEM_MAGIC);
+    ASSERT(it->cid == sinfo->cid);
+    ASSERT(it->sid == sinfo->sid);
+
+    return it;
+}
+```
+
+我们可以看到读取item,经历了下面的几个过程:
+```
+-    先根据itemx里面的sid, 作为下标，在stable, 也就是slab info table,里面找到slab info.
+-    根据slab info 里面的mem字段判断，item是在内存还是disk。
+-    然后根据sid所在slab class id, 计算item长度， 计算item的长度，从内存或者disk读取到数据，返回.
+```
+
+总结上面， 需要找到key，需要找索引，然后找到slab info, 然后根据slab info找到slab, 再读取数据.
