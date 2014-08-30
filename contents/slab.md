@@ -147,4 +147,4 @@ fatcache 写
 3. fatcache不仅有内存slab还有磁盘slab.
 ```
 
-接下来讲一下，另外一个fatcache很核心的东西，[索引](./itemx.md)
+接下来讲一下，另外一个fatcache很核心的东西，[<索引>](./itemx.md)
