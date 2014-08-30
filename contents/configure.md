@@ -135,4 +135,4 @@ slab class优化配置，可以配置Slab每一层的item大小，不用factor�
 
 fatcache 的配置就是上面这些，阅读可以先大概知道，后续真正使用再回来看。
 
-接下去看一下 [fatcache的访问模型](./view_model.md)
+接下去看一下 [Mc协议](./mc_protocol.md)

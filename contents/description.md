@@ -7,9 +7,9 @@ fatcache是由twitter使用memcaced的协议(只支持文本协议)基于SSD来�
 <br />
 对于SSD开发来说, 有两种不同的理解:
 
-*   SSD是更快的磁盘，能保证数据的强一致性。
+*   SSD是更快的磁盘，用作存储, 能保证数据的强一致性。
 
-*   SSD是内存的扩展，当作慢内存使用，不要求数据的强一致性。
+*   SSD是内存的扩展，当作慢内存使用, 作为cache，不要求数据的强一致性。
 
 >NOTE: fatcache作为cache, 所以对TA来说，SSD应该是内存扩展, 以更廉价的方式来代替内存。
 
@@ -36,15 +36,7 @@ fatcache适合用来存储相对不是那么热的数据, 以访问频率来说�
 <br />
 <br />
 
-##### c) 需要提前理解的东西? ######
-
-*  [memcache 协议](https://github.com/memcached/memcached/blob/master/doc/protocol.txt), 协议不熟悉，就无法理解fatcache协议解析状态机。
-
-*  [slab机制](http://en.wikipedia.org/wiki/Slab_allocation) 后续所有读写kv都是在slab里面做操作，接下来就会介绍。
-<br />
-<br />
-
-##### d) Fatcache Vs Memcached #####
+##### c) Fatcache Vs Memcached #####
 
 *   fatcache的实际存储数据在SSD，一小部分cache在内存, mc全部内存
   
@@ -60,7 +52,7 @@ fatcache适合用来存储相对不是那么热的数据, 以访问频率来说�
 <br />
 <br />
 
-##### e) 针对SSD的优化? #####
+##### d) 针对SSD的优化? #####
 
 *   批量写, fatcache每次写磁盘都是slab为单位, 默认1M, 减少大量的小IO写, 同时避免写放大
 
