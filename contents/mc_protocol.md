@@ -150,3 +150,4 @@ touch <key> <exptime> [noreply]\r\n
 还有其他很多命令如Version, Quit, Stats, Slab 这些状态或者统计信息的命令我们这里没有细说，
 想要了解可以自己去深入了解。
 
+下一节是fatcache里面很重要的概念 [<slab机制>](./slab.md)
