@@ -6,7 +6,7 @@
 直接删除索引，而不是真正取删除数据。
 
 我们可以先来看一下索引(itemx)的定义，在`fc_itemx.h`里面
-```
+```c
 struct itemx {
     // itemx如果不用，通过这个指针放回空闲队列，可以重新利用
     STAILQ_ENTRY(itemx) tqe;    /* link in index / free q */
