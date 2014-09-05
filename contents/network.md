@@ -9,9 +9,7 @@ fatcache和twitter的另外一个项目twemproxy代码相似度非常高，像me
 这里稍微介绍一下epoll和其他如Poll, Select的一些区别:
 
 ```
-Epoll: 和FreeBSD的kqueue类似，epoll监听多个fd的时候，使用的是红黑树，操作是O(1), 
-而Select, Poll需要轮询，所以都是O(N), 就是说当监听10万个fd, Select, Poll需要从用户态拷贝大量fd到内核态，
-轮询一遍，这是很费时的。
+Epoll: 和FreeBSD的kqueue类似，epoll监听多个fd的时候，使用的是红黑树，操作是O(1), 而Select, Poll需要轮询，所以都是O(N), 就是说当监听10万个fd, Select, Poll需要从用户态拷贝大量fd到内核态，轮询一遍，这是很费时的。
 
 Select: select对于监听的fd数目是有限制的，最大是FD_SETSIZE, 这个可以手动调整，当fd数目超过FD_SETSIZE时，
 就会产生错误。
