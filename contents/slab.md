@@ -140,6 +140,22 @@ fatcache 写
 只有写才会让内存slab和磁盘slab数据进行交换， 读不会影响数据所在位置是在内存还是磁盘，换句话说，
 只有更新才会影响fatcache的数据的热度。
 
+##### slab空洞问题 #####
+
+我们细心看一下 `_slab_get_item`函数，不难发现每次都是从Slab，末端开始分配。也就是说，如果item删除，
+我们并不会重新利用，相当于这个item只有在内存slab耗尽时，刷到磁盘slab才会重新利用，这样这个带有空洞的slab
+被刷到磁盘，也就是磁盘的数据也会有空洞， 不仅仅是内存刷到磁盘的slab造成空洞，直接删除磁盘slab里的item,也会
+有空洞，造成空洞的过程类似下面:
+
+![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/slab_hole.png)
+
+对于内存空洞，解决方案可以，对每个slab增加一个队列，记录空洞地址，使用时，优先从空洞队列分配，无空洞时，
+从slab后面分配。同时放回slab时，如果是最后一个分配，直接放回slab, 否则放到空洞队列。
+
+***NOTE:*** 上面说的是针对内存空洞，不包含磁盘slab，因为fatcache主要是使用磁盘slab, 如果对每个磁盘slab，
+增加空洞队列，可能会耗掉不少内存，需要提前评估。
+
+
 看完这篇， 应该要理解的几个东西:
 ```
 1. slab 和 slabclass
