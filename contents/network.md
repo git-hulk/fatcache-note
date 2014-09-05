@@ -36,4 +36,4 @@ Poll： poll跟select基本时一样的，除了不对fd数目做限制之外。
 
 上面我们说了，fatcache只支持epoll, 也就是在其它类unix的操作系统，如FreeBSD，都傻逼了，除非自己支持。
 
-我们下面来看看fatcache如何使用Epoll
+我们下面来看看fatcache如何使用Epoll, 我们从`fc.c`的`main`方法调用`core_start`
