@@ -2,6 +2,8 @@
 
 ------------------------
 
+##### epoll #####
+
 fatcache使用Epoll作为网络IO事件通知机制，也支持Epoll, 这个有点奇怪。从代码上来说，
 fatcache和twitter的另外一个项目twemproxy代码相似度非常高，像message, mbuf, queue等基础数据结构，
 都是自己使用，但twemproxy后面支持其他的网络IO模型，而fatcache没有支持，也许是支持比较晚。
@@ -27,4 +29,11 @@ Poll： poll跟select基本时一样的，除了不对fd数目做限制之外。
 所以，使用ET模式，可能会不小心落掉一些数据，对开发者要求更高。
 
 更加详细的使用方法，建议查看: [How to use epoll](https://banu.com/blog/2/how-to-use-epoll-a-complete-example-in-c/)这篇文章或者直接查看man手册。
+<br />
+<br />
 
+##### fatcache Epoll #####
+
+上面我们说了，fatcache只支持epoll, 也就是在其它类unix的操作系统，如FreeBSD，都傻逼了，除非自己支持。
+
+我们下面来看看fatcache如何使用Epoll
