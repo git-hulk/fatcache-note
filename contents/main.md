@@ -1,6 +1,72 @@
-#### main函数 ####
+#### fatcache启动流程 ####
 
 -------------------
+
+到这里我们对fatcache的基础内容，主要是slab, 索引, 网络IO有一个大致的了解。
+这一节来看看，fatcache是如何启动的，我们很自然的找到了`fc.c`里面的main函数。
+
+我们先来看看里面主要做了哪些事情，然后再一一解释:
+
+```c
+int
+main(int argc, char **argv)
+{
+    rstatus_t status;
+    struct context ctx;
+
+    /* 设置默认参数 */
+    fc_set_default_options();
+
+    /* 从启动命令行里面获取参数，并设置到settings对应的参数 */
+    status = fc_get_options(argc, argv);
+    
+    ...
+    
+    /* 后台运行模式 */
+    if (settings.daemonize) {
+        status = fc_daemonize(false);
+        if (status != FC_OK) {
+            exit(1);
+        }
+    }
+
+    status = fc_set_profile();
+    if (status != FC_OK) {
+        exit(1);
+    }
+
+    /*
+     * 这里面会初始化一些公用的数据结构， 如mbuf, meesage, conn等队列。
+     * 时间事件和slab的初始化也是在这个函数。
+     */
+    status = core_init();
+    if (status != FC_OK) {
+        exit(1);
+    }
+
+    fc_print();
+
+    /* 初始化epoll, 并把server的监听事件添加到epoll中 */
+    status = core_start(&ctx);
+    if (status != FC_OK) {
+        exit(1);
+    }
+    
+    for (;;) {
+        /* 开始处理网络事件，我们上面core_start已经把监听fd，添加到Epoll, 所以到这里会开始监听。 */
+        status = core_loop(&ctx);
+        if (status != FC_OK) {
+            break;
+        }
+    }
+
+    /* 什么也没做 */
+    core_stop(&ctx);
+
+    return 0;
+}
+
+```
 
 我们先来看看Server如何启动监听:
 
