@@ -34,6 +34,93 @@ Poll： poll跟select基本一样，除了不对fd数目做限制之外。
 
 ##### fatcache Epoll #####
 
-上面我们说了，fatcache只支持epoll, 也就是在其它类unix的操作系统，如FreeBSD，就傻逼了，除非自己支持。
+我们先对`fc_event.c`实现的函数都做一遍简单说明:
 
-我们下面来看看fatcache如何使用Epoll, 我们从`fc.c`的`main`方法调用`core_start`
+我们先来看看Server如何启动监听:
+
+1. `main` 函数里面调用了`core_start`
+```c
+rstatus_t
+core_start(struct context *ctx)
+{
+    rstatus_t status;
+
+    /* 创建ctx */
+    ctx->ep = -1; 
+    ctx->nevent = 1024;
+    ctx->max_timeout = -1; 
+    ctx->timeout = ctx->max_timeout;
+    ctx->event = NULL;
+
+    /* 创建epoll, 并放到ctx全局变量 */
+    status = event_init(ctx, 1024);
+    if (status != FC_OK) {
+        return status;
+    }   
+
+    /* server_listen开始把监听fd添加到epoll, 然后开始监听连接事件 */
+    status = server_listen(ctx);
+    if (status != FC_OK) {
+        return status;
+    }   
+
+    return FC_OK;
+}
+```
+接下来看看server_listen, 我们只看一下，如何把server fd添加到epoll。
+```c
+rstatus_t
+server_listen(struct context *ctx)
+{
+    ...
+    struct conn *s;
+    ...
+    
+    /* 我们可以看到server的fd会被封装成一个connection, 专门做监听的connection */
+    s = conn_get(sd, false);
+    ...
+    /* 这里就是把监听的connection的fd添加到epoll */
+    status = event_add_conn(ctx->ep, s);
+    
+    /* 删除发送事件监听 */
+    status = event_del_out(ctx->ep, s);
+}
+```
+
+我们可以看到监听的server fd先是被包成fd, 然后再通过`event_add_conn`添加到epoll, 后面还有一个`event_del_out`,
+因为在`event_add_conn`里面设置了in和out监听事件, 但是作为专门接收的fd, 不会有out事件，所以这里关闭。
+
+我们可以继续看看`conn_get`的实现:
+```c
+struct conn *
+conn_get(int sd, bool client)
+{
+    struct conn *c; 
+
+    c = _conn_get();
+    if (c == NULL) {
+        return NULL;
+    }   
+    c->sd = sd; 
+    c->client = client ? 1 : 0;
+
+    if (client) {
+        /* client */
+        c->recv = msg_recv;
+        c->send = msg_send;
+        c->close = client_close;
+        c->active = client_active;
+    } else {
+        /* server accept */
+        c->recv = server_recv;
+        c->send = NULL;
+        c->close = NULL;
+        c->active = NULL;
+    }
+
+    log_debug(LOG_VVERB, "get conn %p c %d", c, c->sd);
+    return c;
+}
+```
+
+
