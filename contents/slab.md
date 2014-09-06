@@ -66,6 +66,13 @@ struct item *
 slab_get_item(uint8_t cid) {
     
     ....
+    /* item 索引使用耗尽，应该做一些剔除 */
+    if (itemx_empty()) {
+        status = slab_evict();
+        if (status != FC_OK) {
+            return NULL;
+        }   
+    }  
     
     if (!TAILQ_EMPTY(&c->partial_msinfoq)) {
         /* 如果不为空，则从partial slab队列里面取一个slab, _slab_get_item在下面定义*/
