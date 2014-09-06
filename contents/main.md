@@ -76,6 +76,8 @@ main(int argc, char **argv)
 
 3. 初始化epoll，并开始监听。
 ```
+<br />
+<br />
 
 ##### 8.1 配置参数 #####
 
@@ -241,6 +243,8 @@ core_loop(struct context *ctx)
 
 我们上面可以看到， server正确接收到一个用户请求后，会调用`conn_get`来创建一个连接，
 然后通过`event_add_conn`添加到Epoll监听。
+<br />
+<br />
 
 ##### 8.5 the end #####
 
