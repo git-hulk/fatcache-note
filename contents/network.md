@@ -36,91 +36,141 @@ Poll： poll跟select基本一样，除了不对fd数目做限制之外。
 
 我们先对`fc_event.c`实现的函数都做一遍简单说明:
 
-我们先来看看Server如何启动监听:
-
-1. `main` 函数里面调用了`core_start`
+`event_init` 创建epoll, 这个函数在fatcache启动的时候调用。每个fatcache实例只会有一个epoll对象。
+后续有需要监听的fd, 都是添加到到这个epoll对象。
 ```c
-rstatus_t
-core_start(struct context *ctx)
+int
+event_init(struct context *ctx, int size)
 {
-    rstatus_t status;
+    int status, ep; 
+    struct epoll_event *event;
 
-    /* 创建ctx */
-    ctx->ep = -1; 
-    ctx->nevent = 1024;
-    ctx->max_timeout = -1; 
-    ctx->timeout = ctx->max_timeout;
-    ctx->event = NULL;
+    ASSERT(ctx->ep < 0); 
+    ASSERT(ctx->nevent != 0); 
+    ASSERT(ctx->event == NULL);
 
-    /* 创建epoll, 并放到ctx全局变量 */
-    status = event_init(ctx, 1024);
-    if (status != FC_OK) {
-        return status;
+    /* 创建epoll对象 */
+    ep = epoll_create(size);
+    if (ep < 0) {
+        log_error("epoll create of size %d failed: %s", size, strerror(errno));
+        return -1; 
     }   
 
-    /* server_listen开始把监听fd添加到epoll, 然后开始监听连接事件 */
-    status = server_listen(ctx);
-    if (status != FC_OK) {
-        return status;
+    /* 提前为Epoll的事件申请空间 */
+    event = fc_calloc(ctx->nevent, sizeof(*ctx->event));
+    if (event == NULL) {
+        status = close(ep);
+        if (status < 0) {
+            log_error("close e %d failed, ignored: %s", ep, strerror(errno));
+        }   
+        return -1; 
     }   
-
-    return FC_OK;
-}
-```
-接下来看看server_listen, 我们只看一下，如何把server fd添加到epoll。
-```c
-rstatus_t
-server_listen(struct context *ctx)
-{
-    ...
-    struct conn *s;
-    ...
     
-    /* 我们可以看到server的fd会被封装成一个connection, 专门做监听的connection */
-    s = conn_get(sd, false);
-    ...
-    /* 这里就是把监听的connection的fd添加到epoll */
-    status = event_add_conn(ctx->ep, s);
+    /* 把epoll相关数据结构都是放在ctx里面 */
+    ctx->ep = ep; 
+    ctx->event = event;
     
-    /* 删除发送事件监听 */
-    status = event_del_out(ctx->ep, s);
+    return 0;   
 }
 ```
 
-我们可以看到监听的server fd先是被包成fd, 然后再通过`event_add_conn`添加到epoll, 后面还有一个`event_del_out`,
-因为在`event_add_conn`里面设置了in和out监听事件, 但是作为专门接收的fd, 不会有out事件，所以这里关闭。
+`event_deinit` 销毁epoll对象，这个只有在Fatcache关闭的时候会使用，只是关闭对应fd,比较简单, 自己去看。
 
-我们可以继续看看`conn_get`的实现:
+`event_add_conn`: 我们注意到添加epoll的fd, 是包装成connection的形式传递进来。然后添加的监听参数都是
+`EPOLLIN | EPOLLOUT | EPOLLET`, 并把connection放到event.data.ptr， 可以作为事件到来时，回调函数的参数。
 ```c
-struct conn *
-conn_get(int sd, bool client)
+int
+event_add_conn(int ep, struct conn *c)
 {
-    struct conn *c; 
+    int status;
+    struct epoll_event event;
 
-    c = _conn_get();
-    if (c == NULL) {
-        return NULL;
-    }   
-    c->sd = sd; 
-    c->client = client ? 1 : 0;
+    ASSERT(ep > 0);
+    ASSERT(c != NULL);
+    ASSERT(c->sd > 0);
 
-    if (client) {
-        /* client */
-        c->recv = msg_recv;
-        c->send = msg_send;
-        c->close = client_close;
-        c->active = client_active;
+    /* 监听事件类型是in和out */
+    event.events = (uint32_t)(EPOLLIN | EPOLLOUT | EPOLLET);
+    /* connection作为event的data */
+    event.data.ptr = c;
+
+    /* connection的fd添加到epoll */
+    status = epoll_ctl(ep, EPOLL_CTL_ADD, c->sd, &event);
+    if (status < 0) {
+        log_error("epoll ctl on e %d sd %d failed: %s", ep, c->sd,
+                  strerror(errno));
     } else {
-        /* server accept */
-        c->recv = server_recv;
-        c->send = NULL;
-        c->close = NULL;
-        c->active = NULL;
+        c->send_active = 1;
+        c->recv_active = 1;
     }
 
-    log_debug(LOG_VVERB, "get conn %p c %d", c, c->sd);
-    return c;
+    return status;
 }
 ```
 
+`event_del_conn`是跟`event_add_conn`刚好相反，把一个链接的fd从epoll移除，也就是关闭链接。
 
+```
+int
+event_del_conn(int ep, struct conn *c)
+{
+    int status;
+
+    ASSERT(ep > 0);
+    ASSERT(c != NULL);
+    ASSERT(c->sd > 0);
+
+    /* 把connection fd从epoll中移除，即不再监听 */
+    status = epoll_ctl(ep, EPOLL_CTL_DEL, c->sd, NULL);
+    if (status < 0) {
+        log_error("epoll ctl on e %d sd %d failed: %s", ep, c->sd,
+                  strerror(errno));
+    } else {
+        c->recv_active = 0;
+        c->send_active = 0;
+    }
+
+    return status;
+}
+```
+
+另外两个函数`int event_add_out(int ep, struct conn *c);` 和 `int event_del_out(int ep, struct conn *c);` 的作用是，
+添加和删除out事件，实现和event_add[del]_conn类似。
+
+最后一个函数`event_wait`， 之前的实现是初始化和为epoll添加或者删除监听的fd，epoll真正的监听是从event_wait开始。
+```c
+int event_wait(int ep, struct epoll_event *event, int nevent, int timeout)
+{
+    ...
+    for (;;) {
+        /* epoll等待事件或者超时 */
+        nsd = epoll_wait(ep, event, nevent, timeout);
+        if (nsd > 0) {
+            /* 有文件事件到来 */
+            return nsd;
+        }
+
+        if (nsd == 0) {
+            /* 超时 */
+            if (timeout == -1) {
+               log_error("epoll wait on e %d with %d events and %d timeout "
+                         "returned no events", ep, nevent, timeout);
+                return -1;
+            }
+
+            return 0;
+        }
+
+        if (errno == EINTR) {
+            continue;
+        }
+
+        log_error("epoll wait on e %d with %d events failed: %s", ep, nevent,
+                  strerror(errno));
+
+        return -1;
+    }
+    
+    ...
+}
+```
