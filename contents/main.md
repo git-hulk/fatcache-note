@@ -248,7 +248,7 @@ core_loop(struct context *ctx)
 
 ##### 8.5 the end #####
 
-我们这一节说了fatcache启动的时候，做了哪些事情，然后对如何启动监听做了比较详细的讲解。
+我们这一节说了fatcache启动的时候做了哪些事情，然后对如何启动监听做了比较详细的讲解。
 
 最后讲到了server开始监听，接受client的连接，并加入到epoll的监听列表，接下去，client就可以和
 server进行通讯了。
