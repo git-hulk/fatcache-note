@@ -217,7 +217,7 @@ core_loop(struct context *ctx)
 `core_core`里面实现比较简单，自己去看即可，他会根据到来的事件类型是in还是out, 还决定回调函数，
 这个回调函数就是我们上面`conn_get`里面设置的回调。
 
-由于我们这里是conn类型不是client, 所以回调函数应该是`server_recv`, `server_recv`通过不断调用`server_accept`,
+由于我们这里是conn是server监听的fd, 不是client, 所以回调函数应该是`server_recv`, `server_recv`通过不断调用`server_accept`,
 来接收client发送数据。
 ```c
     for (;;) {
@@ -243,3 +243,10 @@ core_loop(struct context *ctx)
 然后通过`event_add_conn`添加到Epoll监听。
 
 ##### 8.5 the end #####
+
+我们这一节说了fatcache启动的时候，做了哪些事情，然后对如何启动监听做了比较详细的讲解。
+
+最后讲到了server开始监听，接受client的连接，并加入到epoll的监听列表，接下去，client就可以和
+server进行通讯了。
+
+我们下一节来说一下， [处理用户请求](./command.md)
