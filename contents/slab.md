@@ -66,7 +66,7 @@ fatcache的slab来自两个地方，一个是内存，另一个是磁盘。在�
 ```
 fatcache 写
 1. 如果还有内存slab未写满，直接分配地址，返回。
-2。 如果所有内存slab已经写满， 从内存full slab队列头部，剔除一个slab, 交换到磁盘slab，
+2. 如果所有内存slab已经写满， 从内存full slab队列头部，剔除一个slab, 交换到磁盘slab，
 空出内存slab, 重新分配。
 ```
 我们可以看到，写的时候一定是写在内存里面，而读是，根据slab所在位置，直接读取，所以我们可以知道，
@@ -77,7 +77,7 @@ fatcache 写
 
 --------------------------
 
-##### 4.4 slab的三种状态 #####
+##### 4.4 slab在fatcache的使用 #####
 
 看过上面的内容之后，应该能知道slab大概的样子，以及Slabclass是干嘛的。 slabcloass每一级slab可以分配
 的item数量是固定的， 所以slab可能会有三种状态: free slab(完全没有使用)， partial slab(部分使用),
