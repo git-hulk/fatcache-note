@@ -110,7 +110,7 @@ event_add_conn(int ep, struct conn *c)
 
 `event_del_conn`是跟`event_add_conn`刚好相反，把一个链接的fd从epoll移除，也就是关闭链接。
 
-```
+```c
 int
 event_del_conn(int ep, struct conn *c)
 {
