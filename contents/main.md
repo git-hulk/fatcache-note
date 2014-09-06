@@ -68,6 +68,38 @@ main(int argc, char **argv)
 
 ```
 
+从上面的代码里面我们可以看到，main主要的三个事情:
+```
+1. 默认配置参数设置和启动参数解析。
+
+2. 初始化数据结构，包括slab和时间
+
+3. 初始化epoll，并开始监听。
+```
+
+##### 8.1 配置参数 #####
+
+有哪些参数，可以回去看一下 [配置参数](./configure.md).
+相关代码实现很简单，不细说。
+
+<br />
+<br />
+
+##### 8.2 初始化 #####
+
+`core_init`里面调用`slab_init`做的几个主要的事情:
+```
+1. slab_init_ctable, 初始化slabcalss table.
+
+2. 根据配置的最大内存slab大小以及磁盘分区大小，将两块分割成slab, 并放到各自的空闲队列。
+
+3. slab_init_stable, 创建并生成slab对应的Slab info table。
+```
+<br />
+<br />
+
+##### 8.3 启动监听 #####
+
 我们先来看看Server如何启动监听:
 
 首先在 `main` 函数里面调用了`core_start`
@@ -184,3 +216,30 @@ core_loop(struct context *ctx)
 ```
 `core_core`里面实现比较简单，自己去看即可，他会根据到来的事件类型是in还是out, 还决定回调函数，
 这个回调函数就是我们上面`conn_get`里面设置的回调。
+
+由于我们这里是conn类型不是client, 所以回调函数应该是`server_recv`, `server_recv`通过不断调用`server_accept`,
+来接收client发送数据。
+```c
+    for (;;) {
+        sd = accept(s->sd, NULL, NULL);
+        if (sd < 0) {
+            ...
+        }
+
+        break;
+    }
+    ...
+    /* 为到来的请求，创建一个connection */
+    c = conn_get(sd, true);
+    ...
+    /* 开始监听这个连接 */
+    status = event_add_conn(ctx->ep, c);
+    
+    ...
+    return FC_OK;
+```
+
+我们上面可以看到， server正确接收到一个用户请求后，会调用`conn_get`来创建一个连接，
+然后通过`event_add_conn`添加到Epoll监听。
+
+##### 8.5 the end #####
