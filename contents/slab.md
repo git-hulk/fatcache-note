@@ -1,23 +1,21 @@
 #### (四) slab分配机制 ####
 ----------------------------
 
-##### 主要内容 ####
 
-3.1 slab分配机制
+4.1 slab分配机制
 
-3.2 slab class
+4.2 slab class
 
-3.3 memory slab & disk slab
+4.3 memory slab & disk slab
 
-3.4 slab 空洞
+4.4 slab 空洞
 
-3.5 the end
-
+4.5 the end
 
 <br />
 <br />
 
-##### slab分配机制？#####
+##### 4.1 slab分配机制？#####
 
 slab内存分配是一种用来高效管理内存的机制，可以避免频繁申请和释放内存带来的内存碎片问题，
 同时提高内存分配效率。最早是在Solaris2.4的内核引入这个算法， 后面广泛应用在许多Unix和
@@ -36,7 +34,7 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 
 -----------------------
 
-##### slab class #####
+##### 4.2 slab class #####
 
 我们申请内存的时候，需要不同长度的内存，这就需要不同item长度的slab, 而slabclass就是这些
 不同长度item的slab的集合。在一般设计slabclass的时候，可以把slabclass看作一个item长度递增
@@ -59,7 +57,7 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 <br />
 <br />
 
-##### memory and disk slab #####
+##### 4.3 memory and disk slab #####
 
 fatcache的slab来自两个地方，一个是内存，另一个是磁盘。在启动的时候，可以指定内存slab大小，
 默认是64M, 我们也会指定分区，磁盘slab大小跟分区大小一致。然后再把内存和磁盘的这片空间，
@@ -79,7 +77,7 @@ fatcache 写
 
 --------------------------
 
-##### slab的三种状态 #####
+##### 4.4 slab的三种状态 #####
 
 看过上面的内容之后，应该能知道slab大概的样子，以及Slabclass是干嘛的。 slabcloass每一级slab可以分配
 的item数量是固定的， 所以slab可能会有三种状态: free slab(完全没有使用)， partial slab(部分使用),
@@ -170,7 +168,7 @@ static struct item * _slab_get_item(uint8_t cid) {
 
 ------------------------
 
-##### slab空洞问题 #####
+##### 4.5 slab空洞问题 #####
 
 我们细心看一下 `_slab_get_item`函数，不难发现每次都是从Slab，末端开始分配。也就是说，如果item删除，
 我们并不会重新利用，相当于这个item只有在内存slab耗尽时，刷到磁盘slab才会重新利用，这样这个带有空洞的slab
