@@ -44,7 +44,7 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 
 第一级item的长是100bytes, item count = 1M/100
 
-第二级item的长度是100byte＊1.2 = 120byte, item count = !M/120
+第二级item的长度是100byte＊1.2 = 120byte, item count = 1M/120
 
 第三级item的长度是120*1.2 = 144bytes, item count = 1M/144
 
