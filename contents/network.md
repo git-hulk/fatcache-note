@@ -176,4 +176,7 @@ int event_wait(int ep, struct epoll_event *event, int nevent, int timeout)
 ```
 ##### the end #####
 
+从上面的代码来看， fatcache在接收到一个Client链接，会生成一个conn结构，添加到epoll里面来，
+并开始监听这个连接。
+
 epoll在fatcache里面的实现比较简单，自己看代码应该问题不大。
