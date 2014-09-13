@@ -2,49 +2,67 @@
 
 ------------------
 
-这一节主要介绍一下fatcache的访问模型， 我们简单以get/set为例，大概过一下整体的访问模型，
-在后面的章节中，能对fatcache的访问流程有个整体认识， 完整的一次请求过程， 在后续的章节详细介绍。
+现在我们应该知道slab是什么， 索引是干什么的，网络监听，接下去我们可以来说说，fatcacahe是如果处理一次
+请求，这里我们以get/set为例来说明。
 
 下图是fatcache大体的架构图:
 
 ![image "fatcache view"](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/fatcache_view.png)
 
-##### get #####
+#####  接收Client的数据 #####
 
-----------------
+我们上一节讲到，fatcache开始监听， 如果有连接到来，就会会通过`conn_get`创建一个connection, 加到监听列表中，
+并设置回调函数。
 
-> 1. 根据key，在hashtable找到itemx, 也就是索引， 如上图找到itemx3.
+其中接收函数为:`fc_message.c`源码中的`msg_recv`，`msg_recv`调用 `msg_recv_chain`, 接着就会调用`msg_parse`进行解析。
+```
+static rstatus_t
+msg_parse(struct context *ctx, struct conn *conn, struct msg *msg)
+{
+      ...
+      
+    msg->parser(msg);
 
-> 2. itemx里面有sid，也就是slab id, 根据slab id,再找到slabinfo.
+    switch (msg->result) {
+    case MSG_PARSE_OK:
+        status = msg_parsed(ctx, conn, msg);
+        break;
 
-> 3. slabinfo 里面有一个mem，如果为1表示在内存的slab, 否则在磁盘中.
+    case MSG_PARSE_FRAGMENT:
+        status = msg_fragment(ctx, conn, msg);
+        break;
 
-> 4. 根据slabinfo所在的位置和索引的偏移，读取到数据，返回.
+    case MSG_PARSE_REPAIR:
+        status = msg_repair(ctx, conn, msg);
+        break;
 
-***Note:*** 我们可以看到，get数据并不会使数据跑到内存中，变成热数据，这是fatcache读性能不好的原因之一，
-以fatcache数据主要在磁盘来说，会有大量的磁盘随机读。
-<br />
-<br />
-##### set #####
+    case MSG_PARSE_AGAIN:
+        status = FC_OK;
+        break;
 
-----------------
+    ...
+}
+```
 
-> 1. set操作先从itemx空闲队列，获取一个itemx.
+上面`msg->parser`这个函数调用就是`fc_memcache.c`中的`memcache_parse_req`, 这个函数里面就是一个mc协议解析的状态机，
 
-> 2. 从内存slab获取item空间? 没有内存slab item可用, 把最老的内存slab交换到磁盘， 留出内存slab
+对发送过来的数据，根据[MC协议](./protocol.md)各个命令格式，一条条命令进行解析。
 
-> 3. 写入数据，返回.
+解析会有下面四种状态:
 
-***Note:*** 写数据一定是在内存，就是说，如果更新数据刚好在磁盘，可以使磁盘数据挪到磁盘，让数据变热。
 
-<br />
+a) `MSG_PARSE_OK`: 解析到一条完整的协议，解析去就是处理这条协议。
 
-##### The End #####
+b) `MSG_PARSE_FRAGMENT`: 接收到get/gets这中多个key的协议，因为message结构就是对应一个key, 
+所以有多个key的时候，需要拆分成多个message。
 
--------------------
+c) `MSG_PARSE_REPAIR`: 因为fatcache接收数据是使用mbuf(大约8k), 所以有可能一条请求的数据的同一个
+字段被断开在两个mbuf, 比如key1是一个完整的key，被拆分到两个mbuf.
+即Mbuf1 => | SET ke| Mbuf2 =>|y1 0 0 3 \r\n abc\r\n|。 
+所以我们就需要通过repair, 把ke这两个字节移到到Mbuf2, 继续解析才能构成完整的字段。
 
-上面介绍了最简单的一个读写流程，上面基本是对前面的slab, itemx做一个重新梳理。下一节介绍 [网络框架](./network.md)，
-认识fatcache接收和发送数据的机制，后面再说协议解析机制，这样所有的过程, 从接收数据到解析协议，到执行请求，到返回，
-就可以串起来了。
+d) `MSG_PARSE_AGAIN`: 这个比较简单，就是当前mbuf已经解析完，然后还没构成完成的一条命令，需要更多数据。
 
-下一节介绍 [网络框架](./network.md)
+
+
+
