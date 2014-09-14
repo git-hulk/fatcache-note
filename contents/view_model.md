@@ -63,6 +63,13 @@ c) `MSG_PARSE_REPAIR`: 因为fatcache接收数据是使用mbuf(大约8k), 所以
 
 d) `MSG_PARSE_AGAIN`: 这个比较简单，就是当前mbuf已经解析完，然后还没构成完成的一条命令，需要更多数据。
 
+<br />
+<br />
 
+上面对于fatcache协议解析的状态简单介绍，帮助初学者理解整个协议解析机制。
 
+##### Get #####
 
+我们在[索引机制](./itemx.md) 那节应该说明， fatcache是通过索引来找到对应的item, 再读取item里面的value.
+
+![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/get_fatcache.png)
