@@ -66,10 +66,62 @@ d) `MSG_PARSE_AGAIN`: 这个比较简单，就是当前mbuf已经解析完，然
 <br />
 <br />
 
-上面对于fatcache协议解析的状态简单介绍，帮助初学者理解整个协议解析机制。
 
 ##### Get #####
+
+上面对于fatcache协议解析的状态简单介绍，帮助初学者理解整个协议解析机制。
 
 我们在[索引机制](./itemx.md) 那节应该说明， fatcache是通过索引来找到对应的item, 再读取item里面的value.
 
 ![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/get_fatcache.png)
+
+```c
+static void
+req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
+{
+    struct itemx *itx;
+    struct item *it;
+    
+    /* 根据md获取索引 */
+    itx = itemx_getx(msg->hash, msg->md);
+    
+    /* 索引为空，说明这个key不存在 */
+    if (itx == NULL) {
+        msg_type_t type;
+
+        /*  
+         * get/gets多个key, frag_id不为空。
+         * 如果是单个key或者是多个key的最后一个key, 直接返回 "END\r\n"
+         * 如果是多个key, 返回EMPTY.
+         */
+        if (msg->frag_id == 0 || msg->last_fragment) {
+            type = MSG_RSP_END;
+        } else {
+            type = MSG_EMPTY;
+        }   
+
+        /* 返回 */
+        rsp_send_status(ctx, conn, msg, type);
+        return;
+    } 
+    
+    /* 从memory或者disk读取value */
+    it = slab_read_item(itx->sid, itx->offset);
+    if (it == NULL) {
+        rsp_send_error(ctx, conn, msg, MSG_RSP_SERVER_ERROR, errno);
+        return;
+    }
+    /* item是否过期? */
+    if (item_expired(it)) {
+        rsp_send_status(ctx, conn, msg, MSG_RSP_NOT_FOUND);
+        return;
+    }
+
+    /* 发送value */
+    rsp_send_value(ctx, conn, msg, it, itx->cas);
+}
+```
+1. `itemx_getx` 会先通过hash, md获取到索引，md是一个20byte的sha1值。
+2. 如果没有过期，会通过`slab_read_item` 读取item。
+3. 之后会通过`item_expired`判断是否过期.
+4. 最后通过`rsp_send_value` 根据协议拼装发送回client.
