@@ -125,3 +125,39 @@ req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
 2. 如果没有过期，会通过`slab_read_item` 读取item。
 3. 之后会通过`item_expired`判断是否过期.
 4. 最后通过`rsp_send_value` 根据协议拼装发送回client.
+
+```c
+struct item *
+slab_read_item(uint32_t sid, uint32_t addr)
+{
+    ...
+    sinfo = &stable[sid];
+    c = &ctable[sinfo->cid];
+    size = settings.slab_size;
+    it = NULL;
+
+    /* 如果item在memory slab, 直接拷贝到readbuf */
+    if (sinfo->mem) {
+        off = (off_t)sinfo->addr * settings.slab_size + addr;
+        fc_memcpy(readbuf, mstart + off, c->size);
+        it = (struct item *)readbuf;
+        goto done;
+    }
+
+    /* 如果item在disk slab */
+    off = slab_to_daddr(sinfo) + addr;
+    /* 由于我们设置slab文件路径是设备，需要对齐读取的地址，为512的倍数 */
+    aligned_off = ROUND_DOWN(off, 512);
+    aligned_size = ROUND_UP((c->size + (off - aligned_off)), 512);
+
+    n = pread(fd, readbuf, aligned_size, aligned_off);
+        it = (struct item *)(readbuf + (off - aligned_off));
+
+done:
+    ASSERT(it->magic == ITEM_MAGIC);
+    ASSERT(it->cid == sinfo->cid);
+    ASSERT(it->sid == sinfo->sid);
+
+    return it;
+}
+```
