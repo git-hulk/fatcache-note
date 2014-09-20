@@ -7,8 +7,10 @@
 当get一个key的时候, 先把key转为sha1值，然后从索引表里面找到索引项，然后读到数据。
 
 也就是说我们存取数据都是通过索引来操作，多么核心的地位啊！！同样，我们可以知道，如果删除一个数据，只需要把索引直接干掉。
+不需要真正的删除数据，下次过来就不知道索引，也会找不到数据，空出的空间会重新利用。
 
-
+我们配置那一节有说到，`-i`就是用来配置索引的大小，单位是M，默认64M, 在64bit操作系统，每个索引占用的是44byte，
+也就是能容纳100多万的k-v, 当索引用完，就会引发剔除老数据，回收索引。
 
 --------------------------
 
@@ -28,7 +30,7 @@ struct itemx {
 } __attribute__ ((__packed__));
 ```
 
-itemx在hashtable里面的结构如下:
+itemx在hashtable里面的表示如下:
 
 ![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/hashtable.png)
 
@@ -38,9 +40,9 @@ md: 这是一个长度为20的字符串，这个是key进行sha1后得到的，�
 那么认为key相同，不过这个概率很小，基本可以忽略，所以可知，查找是通过对比md来对比，而不是真正的key,
 这样可以减少key在itemx的存储空间， 又可以提高比较效率.
 
-sid: 记录这个索引的key, 对应value所在的slab编号.
+sid: 记录这个索引的key, 对应数据所在的slab编号。
 
-offset: 记录这个索引的key，对应value在slab中的偏移。
+offset: 记录这个索引的key，对应数据在slab中的偏移位置。
 
 cas: 每个key都会记录一个unique数值，可以看作版本号，在check and set的时候使用.
 
@@ -65,8 +67,14 @@ cas: 每个key都会记录一个unique数值，可以看作版本号，在check 
 16 }
 ```
 
-其中参数`hash`是外部计算好的hash值, md也是根据key做sha1得到的。可以看到第7代码是先获取到bucket链表，然后遍历bucket，
-查找md一致的itemx， 这段代码比较简单，这里不再罗嗦.
+1) 第一步就是通过`itemx_bucket`找到key所在hashtable里面的bucket，也就是一个itemx队列的头部
+
+2) 第二部通过 `STAILQ_FOREACH`遍历整个itemx链表，找到md值一样的索引，返回。
+
+所有的key都是转为`sha1`值， 如果有不同key, 得到一样的`sha1`值， 那么老的key会被覆盖，不过这个概率很小，
+也是不影响使用，因为作为cache, 本身就会有剔除，这个可以看作是一种剔除.
+
+
 <br />
 <br />
 ##### 根据itemx读数据 #####
@@ -110,7 +118,11 @@ req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
     rsp_send_value(ctx, conn, msg, it, itx->cas);
 }
 ```
-上面如果itemx存在，就会调用`slab_read_item`来获取item, 下面看一下这个函数:
+1) 先找索引(itemx), 如果有索引，说明数据存在，用`slab_read_item`读取。
+2）读到数据后，`item_expired`判断有没有过期。
+3）没有过期的话，就通过`rsp_send_value`拼装成mc的返回结构数据，返回。
+
+下面是具体`slab_read_item`实现:
 ```c
 struct item *
 slab_read_item(uint32_t sid, uint32_t addr)
@@ -211,13 +223,15 @@ slab_get_item(uint8_t cid)
 }
 
 ```
+
+我们已经说过，索引数量是用户可配置的，如果索引耗完，就会通过`slab_evict`来把老的slab剔除，回收索引。
+slab剔除函数我们后续再来详细说。
 <br />
 <br />
 ##### The End #####
 
 这一节对itemx（索引）进行比较详细的介绍，包括在索引的作用，用法等。 还有一个注意的点，剔除slab的时候，
-只是回收索引，然后将slab放到空闲slab队列，并没有真正擦除slab的数据，这样下次写数据就会覆盖之前的数据，
-减少擦除slab的时间，这个设计非常赞..
+只是回收索引，然后将slab放到空闲slab队列，并没有真正擦除slab的数据，直接在下次写直接覆盖，减少擦除slab的时间。
 
 我们知道了slab机制，索引机制，相当于知道数据如何存储，如何查找数据。接下来我们说一下[fatcache基本访问模型](./view_model.md)，
 对上面说过的所有东西重新梳理一下。
