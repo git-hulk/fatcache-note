@@ -44,3 +44,10 @@ fatcache-note
 [12. 总结](/contents/end.md) (0%)
 
 
+#### Contact ####
+
+```Sina Weibo```: [@改名hulk](http://www.weibo.com/tianyi4)
+
+```Gmail```: [hulk.website@gmail.com](mailto:hulk.website@gmail.com)
+
+```Blog```: [www.hulkdev.com](http://sinaapp.hulkdev.com)
