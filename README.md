@@ -29,11 +29,10 @@ fatcache-note
 [8. fatcache启动流程](/contents/main.md) (100%)
 
 
-[9. fatcache基本访问模型](/contents/view_model.md) (100%)
+[9. 命令处理](/contents/compelete_process.md) (100%)
 
-[10. Message](/contents/message.md)
 
-[11. 总结](/contents/end.md) (0%)
+[10. 总结](/contents/end.md) (0%)
 
 
 #### Contact ####
