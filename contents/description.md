@@ -2,11 +2,9 @@
 
 ------------------
 
-fatcache从名字上来理解，就是fat-cache, 也就意味着更大、更肥的cache。个人对于cache的理解，无非是协议+数据。
-比如memecached, 就是一套mc协议+内存存储，协议来定义存取操作，内存存储这些kv数据。
-而fatcache跟mc类似，使用的是mc文本协议+ssd存储。
-从上面的描述我们大概可以知道，fatcache跟mc大概的区别就是，存储数据在内存还是在磁盘。当然这只是最大概的区别，
-实现上还有很多的差别，比如fatcache是单线程，针对SSD做了优化等等。
+fatcache是基于mc协议的SSD cache, 就是说，交互协议是mc的协议，数据存储在SSD， memcached是将数据放在内存中.
+fatcache跟memcached类似，都是通过slab来管理数据，但有些区别，后面我们会说到。
+
 
 <br />
 <br />
