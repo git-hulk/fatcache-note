@@ -11,8 +11,8 @@ MC指的是memcached, 它支持文本和二进制协议，fatcache只使用文�
 *   Retrieval Commands, 读相关命令
 *   Delete Comands 删除命令
 *   Touch Comands 修改过期时间命令
+*   其他stats命令，fatcache不支持.
 
-***NOTE:*** 个人觉得看一个开源的nosql, 第一个需要了解和熟记的就是协议，不然后面解析完全没法看.
 <br />
 <br />
 
