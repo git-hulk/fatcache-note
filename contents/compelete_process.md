@@ -6,7 +6,7 @@
 
 我们开始讲解一些各个命令的在fatcache的处理:
 
-1） GET/GETS
+##### 1） GET/GETS #####
 
 GET/GETS 都是由`req_process_get`同一处理，只是返回的时候，GETS会多返回cas字段。
 ```c
@@ -67,8 +67,10 @@ Note: `slab_read_item` 通过索引里面的mem判断数据在内存还是在磁
 
 下面是GET/GETS的示意图
 ![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/get_fatcache.png)
+<br />
+<br />
 
-2) DELETE
+##### 2) DELETE #####
 
 fatcache的删除非常简单，直接把索引删除即可，没有索引就找不到数据，不用真正去擦除内存或者磁盘里面的数据，而这些空间会在内存或者磁盘不够的时候，重新被写。这个设计很巧妙，不用擦除，下次直接覆盖。下面是delete的实现:
 ```c
@@ -89,8 +91,10 @@ req_process_delete(struct context *ctx, struct conn *conn, struct msg *msg)
 ```
 
 我们看到，只有简单通过`itemx_removex` 从索引表里面删除索引，直接返回。
+<br />
+<br />
 
-3) SET
+##### 3) SET #####
 
 添加数据的时候比较特殊， 我们之前说过(Ps: 之前说了那么多，鬼记得你说什么)，写入数据时，一定是写在内存。 
 所以我们写一段时间后，会发现内存slab耗尽，这时候会把最老的slab交换到磁盘，空出一个内存slab, 让新数据写入。
@@ -111,6 +115,8 @@ req_process_delete(struct context *ctx, struct conn *conn, struct msg *msg)
 还有其他一些如： Add, Replace, Append..等等命令，比较简单，大家看懂上面的处理，再去看其他命令处理都不是问题。
 这里为了限制篇幅，我们也不完全解释所有命令。
 
+<br />
+<br />
 ##### The End #####
 
 这一节主要说了get、set、delete的具体处理方式。我们前面已经讲了, slab, 索引(itemx), 网络, 数据接收以及协议解析， 
