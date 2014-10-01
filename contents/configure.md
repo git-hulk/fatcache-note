@@ -2,6 +2,8 @@
 
 --------------------
 
+初学者如果对启动参数不了解，可以参照下面解释，否则可以跳过这节。
+
 ```
 Usage: fatcache [-?hVdS] [-o output file] [-v verbosity level]
            [-p port] [-a addr] [-e hash power]
