@@ -23,7 +23,7 @@ fatcache-note
 [5. 索引机制](/contents/itemx.md) (100%)
 
 
-[6. 网络框架](/contents/network.md) (100%)
+[6. Epoll](/contents/network.md) (100%)
 
 
 [8. fatcache启动流程](/contents/main.md) (100%)
