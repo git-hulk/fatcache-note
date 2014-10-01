@@ -34,6 +34,8 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 简单版的slab如下图所示:
 
 ![image](https://github.com/git-hulk/fatcache-note/blob/master/snapshot/slab_1.png)
+每次我们添加kv到fatcache的时候，直接从slab中拿到一个item，然后写入。
+
 <br />
 <br />
 
@@ -41,11 +43,12 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 
 ##### 4.2 slab class #####
 
-我们申请内存的时候，需要不同长度的内存，这就需要不同item长度的slab, 而slabclass就是这些
+由于并不是所有的kv的长度都是一样的，这就需要不同item长度的slab, 而slabclass就是这些
 不同长度item的slab的集合。在一般设计slabclass的时候，可以把slabclass看作一个item长度递增
-的数组，并把slab放到对应的队列中。
+的数组，并把slab放到对应的队列中。当在添加数据的时候，找到能容纳kv长度的slabclass,然后从未使用完或者空闲的slab,
+分配一个item空间。
 
-如slabclass有3级， 假设每个slab是1M, 第一级item长度是100byte, 每级增长因子是1.2。
+如slabclass有n级， 假设每个slab是1M, 第一级item长度是100byte, 每级增长因子是1.2。
 
 第一级item的长是100bytes, item count = 1M/100
 
@@ -65,8 +68,9 @@ item是1024byte, 那么一个slab就是切分成1M/1024 = 1024个item.
 ##### 4.3 memory and disk slab #####
 
 fatcache的slab来自两个地方，一个是内存，另一个是磁盘。在启动的时候，可以指定内存slab大小，
-默认是64M, 我们也会指定分区，磁盘slab大小跟分区大小一致。然后再把内存和磁盘的这片空间，
-切分为一块块slab, 再添加到free slab队列。
+默认是64M, 我们也会指定磁盘分区。然后再把内存和磁盘的空间，切分为一块块slab, 再添加到free slab队列。
+fatcache的内存slab, 充当的角色是写缓存，每次写的时候，一定是写在内存slab, 当写入时，发现没有内存slab,
+就将最老的slab刷入磁盘。
 
 ```
 fatcache 写
@@ -85,7 +89,7 @@ fatcache 写
 ##### 4.4 slab在fatcache的使用 #####
 
 看过上面的内容之后，应该能知道slab大概的样子，以及Slabclass是干嘛的。 slabcloass每一级slab可以分配
-的item数量是固定的， 所以slab可能会有三种状态: free slab(完全没有使用)， partial slab(部分使用),
+的item长度和数量是固定的， 所以slab可能会有三种状态: free slab(完全没有使用)， partial slab(部分使用),
 full slab(全部使用).
 
 最开始， 由于没开始使用，只会有free slab， 当使用一段时间后，就转换为partial slab, 如果这个slab已经被分配完，
