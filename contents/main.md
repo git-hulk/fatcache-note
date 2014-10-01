@@ -76,10 +76,12 @@ main(int argc, char **argv)
 
 3. 初始化epoll，并开始监听。
 ```
+
+fatcache的main函数跟其它的nosql也差不多，根据用户配置参数，初始化，并开始监听用户请求，太不高贵冷艳了..
 <br />
 <br />
 
-##### 8.1 配置参数 #####
+##### 配置参数 #####
 
 有哪些参数，可以回去看一下 [配置参数](./configure.md).
 相关代码实现很简单，不细说。
@@ -97,6 +99,7 @@ main(int argc, char **argv)
 
 3. slab_init_stable, 创建并生成slab对应的Slab info table。
 ```
+记得吧? 前面已经说过了，我们是用slab来管理数据，这里初始化slab。
 <br />
 <br />
 

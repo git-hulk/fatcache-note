@@ -40,6 +40,6 @@ fatcache-note
 
 ```Sina Weibo```: [@改名hulk](http://www.weibo.com/tianyi4)
 
-```     Gmail```: [hulk.website@gmail.com](mailto:hulk.website@gmail.com)
+```Gmail```: [hulk.website@gmail.com](mailto:hulk.website@gmail.com)
 
-```      Blog```: [www.hulkdev.com](http://hulkdev.sinaapp.com)
+```Blog```: [www.hulkdev.com](http://hulkdev.sinaapp.com)
