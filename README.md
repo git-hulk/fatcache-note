@@ -23,25 +23,17 @@ fatcache-note
 [5. 索引机制](/contents/itemx.md) (100%)
 
 
-[6. fatcache基本访问模型](/contents/view_model.md) (100%)
-
-
-[7. 网络框架](/contents/network.md) (100%)
+[6. 网络框架](/contents/network.md) (100%)
 
 
 [8. fatcache启动流程](/contents/main.md) (100%)
 
 
-[9. 协议解析状态机](/contents/protocal_state.md) (0%)
+[9. fatcache基本访问模型](/contents/view_model.md) (100%)
 
+[10. Message](/contents/message.md)
 
-[10. Message & Mbuf](/contents/msg_and_mbuf.md) (0%)
-
-
-[11. 一次完整命令](/contents/compelete_process.md) (0%)
-
-
-[12. 总结](/contents/end.md) (0%)
+[11. 总结](/contents/end.md) (0%)
 
 
 #### Contact ####
