@@ -256,4 +256,4 @@ core_loop(struct context *ctx)
 最后讲到了server开始监听，接受client的连接，并加入到epoll的监听列表，接下去，client就可以和
 server进行通讯了。
 
-我们下一节来说一下， [处理用户请求](./command.md)
+我们下一节来说一下， [用户数据接收和解析](./recv_send.md)
