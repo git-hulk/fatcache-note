@@ -52,6 +52,8 @@ msg_recv(struct context *ctx, struct conn *conn)
 ```
 上面代码, `req_recv_next` 创建一个request msg, 进入`msg_recv_chain`开始接收数据并处理请求。
 下面看一下`msg_recv_chain`的详细实现.
+<br />
+
 ##### 1) 接收数据 #####
 ```c
 // 判断最后mbuf是否还有剩余空间， 如果没有创建一个新的buf,放到队列 
