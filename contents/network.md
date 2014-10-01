@@ -180,3 +180,5 @@ int event_wait(int ep, struct epoll_event *event, int nevent, int timeout)
 并开始监听这个连接。
 
 epoll在fatcache里面的实现比较简单，自己看代码应该问题不大。
+
+接下来看一下，[fatcache启动流程](./main.md)
