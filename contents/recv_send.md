@@ -5,6 +5,8 @@
 我们在上一节[fatcache启动流程](./main.md), 可以看到，fatcache开始监听之后，如果有新client到来，就会通过`event_add_conn`, 
 把一个连接添加到epoll的监听列表，开始监听client发送过来的请求数据, 并设置接收和发送回调函数分别为`msg_recv`和`msg_send`。
 
+<br />
+
 ##### Message #####
 
 fatcache所有接收数据或者发送数据都会放在Message的mbuf链表中，一个message代表一个request或者response。
@@ -12,12 +14,15 @@ fatcache所有接收数据或者发送数据都会放在Message的mbuf链表中�
 > 1) 如果msg->request == 1,表示这个msg是request， 对应这个mbuf链表存放就是接收的数据.
 
 > 2) 如果msg->requeset == 0, 表示这个msg是response, 对应mbuf链表存放的是发送数据。
+<br />
 
 ##### request和response如何对应? #####
 
 message中有个peer字段， request msg 的peer就是response msg, 相反response msg的peer为 request msg.
 每个msg一次只能存储一个key, 如果是 `get|gets key1, key2, ..., keyn` 就会被切分成多个msg.
 这些请求处理后会放到输出队列，触发写事件，开始调用写回调数据来返回数据到客户端.
+
+<br />
 
 ##### 接收client数据 #####
 
@@ -47,7 +52,7 @@ msg_recv(struct context *ctx, struct conn *conn)
 ```
 上面代码, `req_recv_next` 创建一个request msg, 进入`msg_recv_chain`开始接收数据并处理请求。
 下面看一下`msg_recv_chain`的详细实现.
-1) 接收数据
+##### 1) 接收数据 #####
 ```c
 // 判断最后mbuf是否还有剩余空间， 如果没有创建一个新的buf,放到队列 
 mbuf = STAILQ_LAST(&msg->mhdr, mbuf, next);
@@ -66,8 +71,8 @@ msize = mbuf_size(mbuf);
 n = conn_recv(conn, mbuf->last, msize);
 
 ```
-
-2) 处理请求数据
+<br />
+##### 2) 处理请求数据 #####
 
 接收完数据之后，进入`msg_parse` 开始处理请求数据:
 
@@ -131,6 +136,7 @@ msg_parse(struct context *ctx, struct conn *conn, struct msg *msg)
 
 > 5)  `default` : 不是上面四种解析状态，就是出错，直接关闭连接，因为mc协议是通过空格来切分数据，前面数据出错，后续数据会受影响，直接关闭连接。
 
+<br />
 上面已经介绍了，接收和解析完数据之后，开始处理请求。
 
 `msg_parsed`会调用`req_recv_done`, 接着`req_recv_done` 调用`req_process` 开始处理请求，并返回数据。
