@@ -4,7 +4,7 @@
 
 ##### epoll #####
 
-fatcache使用Epoll作为网络IO事件通知机制，也只支持Epoll, 这个有点奇怪。从代码上来说，
+fatcache使用Epoll作为网络IO事件通知机制，也只支持Epoll。从代码上来说，
 fatcache和twitter的另外一个项目twemproxy代码相似度非常高，像message, mbuf, queue等基础数据结构，
 都是直接使用，但twemproxy后面支持了其他的网络IO模型，而fatcache没有支持，也许是twemproxy在比较后面才支持。
 
