@@ -2,7 +2,7 @@
 
 ------------------
 
-fatcache是来自Twitter, 基于mc协议的SSD cache, 讲人话就是，交互协议是mc的协议，数据存储在SSD (Ps:memcached是将数据放在内存中)。
+fatcache是来自Twitter, 基于SSD上面实现的cache, 使用mc的协议，数据存储在SSD (Ps:memcached是将数据放在内存中)。
 fatcache的数据放在SSD(其实机械盘也可以，只是性能不佳), 所以相对于内存cache, 如memcached、redis，能容纳更多数据。
 所以叫fat-cache（Ps: 这个是我自己意淫的）, 中文翻译: "死胖子缓存"
 
