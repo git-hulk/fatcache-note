@@ -4,10 +4,11 @@
 
 我们在上一节[fatcache启动流程](./main.md), 可以看到，fatcache开始监听之后，如果有新client到来，就会通过`event_add_conn`, 
 把一个连接添加到epoll的监听列表，开始监听client发送过来的请求数据, 并设置接收和发送回调函数分别为`msg_recv`和`msg_send`。
+接收到和要发送的数据都会放到一个叫`struct msg`的结构中。
 
 <br />
 
-##### Message #####
+##### Msg #####
 
 fatcache所有接收数据或者发送数据都会放在`strcut msg`的`mbu`f链表中，一个msg代表一个request或者response。
 
