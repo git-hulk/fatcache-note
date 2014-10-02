@@ -121,3 +121,5 @@ req_process_delete(struct context *ctx, struct conn *conn, struct msg *msg)
 
 这一节主要说了get、set、delete的具体处理方式。我们前面已经讲了, slab, 索引(itemx), 网络, 数据接收以及协议解析， 
 (除了具体解析之外，由于主要根据mc协议格式，逐个解析字段，没什么好说), 我们这里说了具体的处理，整个完整的fatcache也就这么多内容了。 
+
+下一节 [结束篇](./end.md)
