@@ -9,7 +9,55 @@
 
 ##### Message #####
 
-fatcache所有接收数据或者发送数据都会放在Message的mbuf链表中，一个message代表一个request或者response。
+fatcache所有接收数据或者发送数据都会放在`strcut msg`的`mbu`f链表中，一个msg代表一个request或者response。
+
+下面是`fc_message.h`中 `struct msg`的主要成员:
+```c
+struct msg {
+    TAILQ_ENTRY(msg)     c_tqe; /* 指向下一个处理完的请求 */
+    TAILQ_ENTRY(msg)     m_tqe; /* 指向下一个发送的msg */
+    uint64_t             id;    /* 当前msg 对应的id */
+    struct msg           *peer; /* 对应的msg, 如果是当前msg是request，peer指向即为response */
+    struct conn          *owner;/* msg所属的connection, 每一个connection可能会处理多个request */
+    struct mhdr          mhdr;  /* 接收或者发送数据存放的链表 */
+    uint32_t             mlen;  /* 接收或者发送数据的长度 */
+    int                  state; /* 当前解析到的状态 */
+    uint8_t              *pos;  /* 当前解析到的buf位置 */
+    uint8_t              *token; /* 存放当前解析的token */
+    msg_parse_t          parser; /* 解析msg的函数，在_msg_get函数里面设置 */
+    msg_parse_result_t   result; /* 解析的结果 */
+    msg_type_t           type;  /* 解析到的命令类型，get/gets/del.. */
+    uint8_t              *key_start;      /* key存放的开始地址 */
+    uint8_t              *key_end;        /* key存放的结束地址 */
+
+    uint32_t             hash;            /* key的hash值 */
+    uint8_t              md[20];          /* key进行sha1加密的结果 */
+
+    /* 协议数据 */
+    uint32_t             flags;           /* flags */
+    uint32_t             expiry;          /* expiry */
+    uint32_t             vlen;            /* value length */
+    uint32_t             rvlen;           /* running vlen used by parsing fsa */
+    uint8_t              *value;          /* value marker */
+    uint64_t             cas;             /* cas */
+    uint64_t             num;             /* number */
+
+    /* 如果协议切分成多个fragments是用到，如get/gets多个key */
+    struct msg           *frag_owner;     /* owner of fragment message */
+    uint32_t             nfrag;           /* # fragment */
+    uint64_t             frag_id;         /* id of fragmented message */
+
+    err_t                err;             /* 遇到错误? */
+    unsigned             error:1;         /* error? */
+    unsigned             request:1;       /* request? or response? */
+    unsigned             quit:1;          /* 是否为quit命令 */
+    unsigned             noreply:1;       /* 是否需要把结果返回给客户端 */
+    unsigned             done:1;          /* 处理是否结束? */
+    unsigned             first_fragment:1;/* 第一个处理的片段? 比如get/gets需要在开始输出VALUE常量，需要用这个标志 */
+    unsigned             last_fragment:1; /* 最后一个处理的片段? 返回结束时，需要用到这个标志 */
+    unsigned             swallow:1;       /* swallow response? */
+}
+```
 
 > 1) 如果msg->request == 1,表示这个msg是request， 对应这个mbuf链表存放就是接收的数据.
 
@@ -18,7 +66,7 @@ fatcache所有接收数据或者发送数据都会放在Message的mbuf链表中�
 
 ##### request和response如何对应? #####
 
-message中有个peer字段， request msg 的peer就是response msg, 相反response msg的peer为 request msg.
+`struct msg`中有个peer字段， request msg 的peer就是response msg, 相反response msg的peer为 request msg.
 每个msg一次只能存储一个key, 如果是 `get|gets key1, key2, ..., keyn` 就会被切分成多个msg.
 这些请求处理后会放到输出队列，触发写事件，开始调用写回调数据来返回数据到客户端.
 
@@ -27,7 +75,7 @@ message中有个peer字段， request msg 的peer就是response msg, 相反respo
 ##### 接收client数据 #####
 
 我们来看一下，`fc_message.c`里面`msg_recv`的实现：
-```
+```c
 rstatus_t
 msg_recv(struct context *ctx, struct conn *conn)
 {
