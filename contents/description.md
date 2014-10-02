@@ -2,8 +2,8 @@
 
 ------------------
 
-fatcache是基于mc协议的SSD cache, 交互协议是mc的协议，数据存储在SSD (Ps:memcached是将数据放在内存中).
-TA是cache, 但数据放在SSD(其实机械盘也可以，只是性能不佳), 所以相对于内存cache, 如memcached、redis，能容纳更多数据。
+fatcache是来自Twitter, 基于mc协议的SSD cache, 讲人话就是，交互协议是mc的协议，数据存储在SSD (Ps:memcached是将数据放在内存中)。
+fatcache的数据放在SSD(其实机械盘也可以，只是性能不佳), 所以相对于内存cache, 如memcached、redis，能容纳更多数据。
 所以叫fat-cache（Ps: 这个是我自己意淫的）, 中文翻译: "死胖子缓存"
 
 > 1) 通过slab管理数据，跟memcached类似，但稍有不同.
@@ -14,7 +14,7 @@ TA是cache, 但数据放在SSD(其实机械盘也可以，只是性能不佳), �
 
 > 4) 针对写SSD做了优化
 
-更多的特性在后续详细介绍，这里不能说太多，不然这节会很长。
+更多的特性在后续详细介绍，这里不能说太多(PS: 不然这节会很长, Orz)。
 <br />
 <br />
 对于SSD开发来说, 有两种不同的理解:
