@@ -55,11 +55,11 @@ req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
     rsp_send_value(ctx, conn, msg, it, itx->cas);
 }
 ```
-1. `itemx_getx` 会先通过hash, md获取到索引，md是一个20byte的sha1值。
+1. 获取索引是通过key得到一个20bit的sha1值，放在md[]里面，在根据这个值，计算hash,找到它在hashtable里面的bucket。
 
-2. 如果没有过期，会通过`slab_read_item` 读取item。
+2. 如果有索引，根据索引得到数据所在位置，然后通过`slab_read_item` 读取item。
 
-3. 之后会通过`item_expired`判断是否过期.
+3. 接着通过`item_expired`判断是否过期.
 
 4. 最后通过`rsp_send_value` 根据协议拼装发送回client.
 
@@ -103,7 +103,7 @@ req_process_delete(struct context *ctx, struct conn *conn, struct msg *msg)
 
 1) 如果之前key已经存在? 删除索引
 
-2) 是否还有索引? 有, 直接返回。否则，通过`slab_evict`将磁盘最老的slab剔除，回收索引。 
+2) 是否还有索引可用? 有, 直接返回。否则，通过`slab_evict`将磁盘最老的slab剔除，回收索引。 
 
 3）是否还有内存slab item可用? 有，返回item。 否则, 通过`slab_drain`把最老的内存slab交换到磁盘.
 
