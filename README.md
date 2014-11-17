@@ -44,4 +44,4 @@ fatcache-note
 
 ```Gmail```: [hulk.website@gmail.com](mailto:hulk.website@gmail.com)
 
-```Blog```: [www.hulkdev.com](http://hulkdev.sinaapp.com)
+```Blog```: [www.hulkdev.com](http://www.hulkdev.com)
